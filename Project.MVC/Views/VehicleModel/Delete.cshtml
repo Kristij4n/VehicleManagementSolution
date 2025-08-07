@@ -1,0 +1,30 @@
+﻿@model Project.MVC_.ViewModels.VehicleModelViewModel
+
+@{
+    ViewBag.Title = "Delete Vehicle Model";
+}
+
+<h2>Delete Vehicle Model</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Name</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
+
+        <dt class="col-sm-2">Abrv</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Abrv)</dd>
+
+        <dt class="col-sm-2">Make</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.MakeName)</dd>
+    </dl>
+</div>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.Id)
+
+    <button type="submit" class="btn btn-danger">Delete</button>
+    @Html.ActionLink("Cancel", "Index", null, new { @class = "btn btn-secondary" })
+}
