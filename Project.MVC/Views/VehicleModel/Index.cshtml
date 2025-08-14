@@ -5,29 +5,39 @@
 
 <h2>Vehicle Models</h2>
 
-<!-- Add a Back to Vehicle Makes link for easy navigation -->
-<p>
-    @Html.ActionLink("Back to Makes", "Index", "VehicleMake")
-</p>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="mb-3">
+    <a href="@Url.Action("Index", "VehicleMake")" class="btn btn-secondary">Back to Makes</a>
+    <a href="@Url.Action("Create", "VehicleModel")" class="btn btn-primary">Create New Model</a>
+</div>
 
 @using (Html.BeginForm("Index", "VehicleModel", FormMethod.Get))
 {
-    <p>
-        Filter by Make:
-        @Html.DropDownList("makeId", ViewBag.Makes as SelectList, "All", new { onchange = "this.form.submit();" })
-        Search: @Html.TextBox("search", ViewBag.CurrentFilter as string)
-        <input type="submit" value="Search" />
-    </p>
+    <div class="form-inline mb-3">
+        <label>Filter by Make:</label>
+        @Html.DropDownList("makeId", ViewBag.Makes as SelectList, "All", new { onchange = "this.form.submit();", @class = "form-control mx-2" })
+        <label>Search:</label>
+        @Html.TextBox("search", ViewBag.CurrentFilter as string, new { @class = "form-control mx-2" })
+        <button type="submit" class="btn btn-info">Search</button>
+    </div>
 }
 
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.ActionLink("Name", "Index", new { sortOrder = ViewBag.CurrentSort == "name_desc" ? "" : "name_desc", search = ViewBag.CurrentFilter, makeId = Request["makeId"] })
+                <button type="button" class="btn btn-link p-0" onclick="location.href='@Url.Action("Index", new { sortOrder = ViewBag.CurrentSort == "name_desc" ? "" : "name_desc", search = ViewBag.CurrentFilter, makeId = Request["makeId"] })'">Name</button>
             </th>
             <th>
-                @Html.ActionLink("Abbreviation", "Index", new { sortOrder = ViewBag.CurrentSort == "abrv" ? "abrv_desc" : "abrv", search = ViewBag.CurrentFilter, makeId = Request["makeId"] })
+                <button type="button" class="btn btn-link p-0" onclick="location.href='@Url.Action("Index", new { sortOrder = ViewBag.CurrentSort == "abrv" ? "abrv_desc" : "abrv", search = ViewBag.CurrentFilter, makeId = Request["makeId"] })'">Abbreviation</button>
             </th>
             <th>Make</th>
             <th>Actions</th>
@@ -41,9 +51,9 @@
                 <td>@item.Abrv</td>
                 <td>@item.MakeName</td>
                 <td>
-                    @Html.ActionLink("Details", "Details", new { id = item.Id }) |
-                    @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-info btn-sm">Details</a>
+                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
         }
@@ -53,6 +63,8 @@
 @{
     int page = ViewBag.Page ?? 1;
     int pageSize = ViewBag.PageSize ?? 10;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
     int nextPage = page + 1;
     int prevPage = page - 1;
 }
@@ -60,9 +72,12 @@
     <ul class="pagination">
         @if (page > 1)
         {
-            <li><a href="@Url.Action("Index", new { page = prevPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort, makeId = Request["makeId"] })">&laquo; Previous</a></li>
+            <li><a class="btn btn-secondary" href="@Url.Action("Index", new { page = prevPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort, makeId = Request["makeId"] })">&laquo; Previous</a></li>
         }
-        <li class="active"><span>@page</span></li>
-        <li><a href="@Url.Action("Index", new { page = nextPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort, makeId = Request["makeId"] })">Next &raquo;</a></li>
+        <li class="active"><span class="btn btn-light">@page</span></li>
+        @if (page < totalPages)
+        {
+            <li><a class="btn btn-secondary" href="@Url.Action("Index", new { page = nextPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort, makeId = Request["makeId"] })">Next &raquo;</a></li>
+        }
     </ul>
 </nav>

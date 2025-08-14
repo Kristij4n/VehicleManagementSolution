@@ -124,6 +124,7 @@
     <Compile Include="Class1.cs" />
     <Compile Include="Data\VehicleDbContext.cs" />
     <Compile Include="Data\VehicleDbInitializer.cs" />
+    <Compile Include="DTOs\PagedResult.cs" />
     <Compile Include="DTOs\VehicleMakeDto.cs" />
     <Compile Include="DTOs\VehicleModelDto.cs" />
     <Compile Include="Interfaces\IVehicleMakeService.cs" />

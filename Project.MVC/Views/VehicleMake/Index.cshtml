@@ -14,29 +14,21 @@
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<p>
-    @Html.ActionLink("Create New Make", "Create")
-</p>
-
-@using (Html.BeginForm("Index", "VehicleMake", FormMethod.Get))
-{
-    <p>
-        Search: @Html.TextBox("search", ViewBag.CurrentFilter as string)
-        <input type="submit" value="Search" />
-    </p>
-}
+<div class="mb-3">
+    <a href="@Url.Action("Create", "VehicleMake")" class="btn btn-primary">Create New Make</a>
+    <a href="@Url.Action("Index", "VehicleModel")" class="btn btn-secondary">Go to Models</a>
+</div>
 
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.ActionLink("Name", "Index", new { sortOrder = ViewBag.CurrentSort == "name_desc" ? "" : "name_desc", search = ViewBag.CurrentFilter })
+                <button type="button" class="btn btn-link p-0" onclick="location.href='@Url.Action("Index", new { sortOrder = ViewBag.CurrentSort == "name_desc" ? "" : "name_desc", search = ViewBag.CurrentFilter })'">Name</button>
             </th>
             <th>
-                @Html.ActionLink("Abbreviation", "Index", new { sortOrder = ViewBag.CurrentSort == "abrv" ? "abrv_desc" : "abrv", search = ViewBag.CurrentFilter })
+                <button type="button" class="btn btn-link p-0" onclick="location.href='@Url.Action("Index", new { sortOrder = ViewBag.CurrentSort == "abrv" ? "abrv_desc" : "abrv", search = ViewBag.CurrentFilter })'">Abbreviation</button>
             </th>
             <th>Actions</th>
-            <th>Models</th>
         </tr>
     </thead>
     <tbody>
@@ -46,18 +38,9 @@
                 <td>@item.Name</td>
                 <td>@item.Abrv</td>
                 <td>
-                    @Html.ActionLink("Details", "Details", new { id = item.Id }) |
-                    @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
-                </td>
-                <td>
-                    @Html.ActionLink(
-                        "View Models",          // Link text
-                        "Index",                // Action
-                        "VehicleModel",         // Controller
-                        new { makeId = item.Id }, // Route values
-                        null                    // htmlAttributes
-                    )
+                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-info btn-sm">Details</a>
+                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-danger btn-sm">Delete</a>
                 </td>
             </tr>
         }
@@ -67,6 +50,8 @@
 @{
     int page = ViewBag.Page ?? 1;
     int pageSize = ViewBag.PageSize ?? 10;
+    int totalCount = ViewBag.TotalCount ?? 0;
+    int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
     int nextPage = page + 1;
     int prevPage = page - 1;
 }
@@ -74,9 +59,12 @@
     <ul class="pagination">
         @if (page > 1)
         {
-            <li><a href="@Url.Action("Index", new { page = prevPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort })">&laquo; Previous</a></li>
+            <li><a class="btn btn-secondary" href="@Url.Action("Index", new { page = prevPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort })">&laquo; Previous</a></li>
         }
-        <li class="active"><span>@page</span></li>
-        <li><a href="@Url.Action("Index", new { page = nextPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort })">Next &raquo;</a></li>
+        <li class="active"><span class="btn btn-light">@page</span></li>
+        @if (page < totalPages)
+        {
+            <li><a class="btn btn-secondary" href="@Url.Action("Index", new { page = nextPage, search = ViewBag.CurrentFilter, sortOrder = ViewBag.CurrentSort })">Next &raquo;</a></li>
+        }
     </ul>
 </nav>

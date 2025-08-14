@@ -6,23 +6,24 @@
 
 <h2>Delete Vehicle Make</h2>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Vehicle Make</h4>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>@Html.DisplayNameFor(model => model.Name)</dt>
-        <dd>@Html.DisplayFor(model => model.Name)</dd>
-
-        <dt>@Html.DisplayNameFor(model => model.Abrv)</dt>
-        <dd>@Html.DisplayFor(model => model.Abrv)</dd>
-    </dl>
-
-    @using (Html.BeginForm("Delete", "VehicleMake", new { id = Model.Id }, FormMethod.Post))
-    {
-        @Html.AntiForgeryToken()
-        <input type="submit" value="Delete" class="btn btn-danger" />
-        @Html.Raw(" | ")
-        @Html.ActionLink("Back to List", "Index")
-    }
+<div class="alert alert-warning">
+    Are you sure you want to delete this Vehicle Make?
 </div>
+
+<div class="form-group">
+    <label>Name:</label>
+    <span>@Model.Name</span>
+</div>
+<div class="form-group">
+    <label>Abbreviation:</label>
+    <span>@Model.Abrv</span>
+</div>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.Id)
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="@Url.Action("Index", "VehicleMake")" class="btn btn-secondary">Back to Makes</a>
+    <a href="@Url.Action("Index", "VehicleModel")" class="btn btn-secondary">Go to Models</a>
+}

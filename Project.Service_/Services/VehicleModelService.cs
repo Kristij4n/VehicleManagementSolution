@@ -21,17 +21,22 @@ namespace Project.Service_.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<VehicleModelDto>> GetAllAsync(string search, string sortOrder, int page, int pageSize, int? makeId)
+        public async Task<PagedResult<VehicleModelDto>> GetAllAsync(string search, string sortOrder, int page, int pageSize, int? makeId)
         {
             var query = _context.VehicleModels
                 .Include(vm => vm.Make)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(vm => vm.Name.Contains(search) || vm.Abrv.Contains(search));
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(vm => vm.Name.ToLower().Contains(searchLower) || vm.Abrv.ToLower().Contains(searchLower));
+            }
 
             if (makeId.HasValue)
                 query = query.Where(vm => vm.MakeId == makeId);
+
+            int totalCount = await query.CountAsync();
 
             if (!string.IsNullOrEmpty(sortOrder) && sortOrder.ToLower() == "name_desc")
                 query = query.OrderByDescending(vm => vm.Name);
@@ -42,17 +47,15 @@ namespace Project.Service_.Services
 
             var models = await query.ToListAsync();
 
-            // Ensure MakeName is always filled in DTO
-            var dtos = models.Select(model => new VehicleModelDto
-            {
-                Id = model.Id,
-                Name = model.Name,
-                Abrv = model.Abrv,
-                MakeId = model.MakeId,
-                MakeName = model.Make != null ? model.Make.Name : null
-            });
+            //replaced manual mapping
+            
+            var dtos = _mapper.Map<IEnumerable<VehicleModelDto>>(models);
 
-            return dtos;
+            return new PagedResult<VehicleModelDto>
+            {
+                Items = dtos,
+                TotalCount = totalCount
+            };
         }
 
         public async Task<VehicleModelDto> GetByIdAsync(int id)
@@ -63,44 +66,39 @@ namespace Project.Service_.Services
 
             if (model == null)
                 return null;
+                        
+            //replaced manual mapping
 
-            return new VehicleModelDto
-            {
-                Id = model.Id,
-                Name = model.Name,
-                Abrv = model.Abrv,
-                MakeId = model.MakeId,
-                MakeName = model.Make != null ? model.Make.Name : null
-            };
+            return _mapper.Map<VehicleModelDto>(model);
         }
 
-        public async Task AddAsync(VehicleModelDto modelDto)
+        public async Task<bool> AddAsync(VehicleModelDto modelDto)
         {
             var model = _mapper.Map<VehicleModel>(modelDto);
             _context.VehicleModels.Add(model);
-            await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task UpdateAsync(VehicleModelDto modelDto)
+        public async Task<bool> UpdateAsync(VehicleModelDto modelDto)
         {
             var model = await _context.VehicleModels.FindAsync(modelDto.Id);
             if (model != null)
             {
-                model.Name = modelDto.Name;
-                model.Abrv = modelDto.Abrv;
-                model.MakeId = modelDto.MakeId;
-                await _context.SaveChangesAsync();
+                _mapper.Map(modelDto, model);
+                return await _context.SaveChangesAsync() > 0;
             }
+            return false;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var model = await _context.VehicleModels.FindAsync(id);
             if (model != null)
             {
                 _context.VehicleModels.Remove(model);
-                await _context.SaveChangesAsync();
+                return await _context.SaveChangesAsync() > 0;
             }
+            return false;
         }
     }
-}
+} //improved filtering - case Insensitive filtering

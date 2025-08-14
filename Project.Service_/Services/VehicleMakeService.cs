@@ -22,12 +22,17 @@ namespace Project.Service_.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<VehicleMakeDto>> GetAllAsync(string search = null, string sortOrder = null, int page = 1, int pageSize = 10)
+        public async Task<PagedResult<VehicleMakeDto>> GetAllAsync(string search = null, string sortOrder = null, int page = 1, int pageSize = 10)
         {
             var query = _context.VehicleMakes.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(m => m.Name.Contains(search) || m.Abrv.Contains(search));
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(m => m.Name.ToLower().Contains(searchLower) || m.Abrv.ToLower().Contains(searchLower));
+            }
+
+            int totalCount = await query.CountAsync();
 
             switch (sortOrder)
             {
@@ -48,7 +53,12 @@ namespace Project.Service_.Services
             query = query.Skip((page - 1) * pageSize).Take(pageSize);
 
             var makes = await query.ToListAsync();
-            return _mapper.Map<IEnumerable<VehicleMakeDto>>(makes);
+
+            return new PagedResult<VehicleMakeDto>
+            {
+                Items = _mapper.Map<IEnumerable<VehicleMakeDto>>(makes),
+                TotalCount = totalCount
+            };
         }
 
         public async Task<VehicleMakeDto> GetByIdAsync(int id)
@@ -57,24 +67,25 @@ namespace Project.Service_.Services
             return _mapper.Map<VehicleMakeDto>(make);
         }
 
-        public async Task CreateAsync(VehicleMakeDto makeDto)
+        public async Task<bool> CreateAsync(VehicleMakeDto makeDto)
         {
             var make = _mapper.Map<VehicleMake>(makeDto);
             _context.VehicleMakes.Add(make);
-            await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task UpdateAsync(VehicleMakeDto makeDto)
+        public async Task<bool> UpdateAsync(VehicleMakeDto makeDto)
         {
             var existing = await _context.VehicleMakes.FindAsync(makeDto.Id);
             if (existing != null)
             {
                 _mapper.Map(makeDto, existing);
-                await _context.SaveChangesAsync();
+                return await _context.SaveChangesAsync() > 0;
             }
+            return false;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var make = await _context.VehicleMakes.Include(m => m.VehicleModels).FirstOrDefaultAsync(m => m.Id == id);
             if (make != null)
@@ -82,8 +93,10 @@ namespace Project.Service_.Services
                 if (make.VehicleModels != null && make.VehicleModels.Any())
                     throw new InvalidOperationException("Cannot delete Make with existing Models.");
                 _context.VehicleMakes.Remove(make);
-                await _context.SaveChangesAsync();
+                return await _context.SaveChangesAsync() > 0;
             }
+            return false;
         }
-    }
-}
+    } //updated service methods to return bool
+
+} //improved filtering - case Insensitive filtering

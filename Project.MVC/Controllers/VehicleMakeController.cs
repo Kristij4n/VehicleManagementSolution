@@ -21,13 +21,14 @@ public class VehicleMakeController : Controller
 
     public async Task<ActionResult> Index(string search, string sortOrder, int page = 1, int pageSize = 10)
     {
-        var makesDto = await _vehicleMakeService.GetAllAsync(search, sortOrder, page, pageSize);
-        var viewModels = _mapper.Map<List<VehicleMakeViewModel>>(makesDto);
+        var pagedResult = await _vehicleMakeService.GetAllAsync(search, sortOrder, page, pageSize);
+        var viewModels = _mapper.Map<List<VehicleMakeViewModel>>(pagedResult.Items);
 
         ViewBag.CurrentSort = sortOrder;
         ViewBag.CurrentFilter = search;
         ViewBag.Page = page;
         ViewBag.PageSize = pageSize;
+        ViewBag.TotalCount = pagedResult.TotalCount;
 
         return View(viewModels);
     }
@@ -58,8 +59,11 @@ public class VehicleMakeController : Controller
             return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
         var dto = _mapper.Map<VehicleMakeDto>(viewModel);
-        await _vehicleMakeService.CreateAsync(dto);
-        TempData["Success"] = "Vehicle Make created successfully!";
+        var success = await _vehicleMakeService.CreateAsync(dto);
+        if (success)
+            TempData["Success"] = "Vehicle Make created successfully!";
+        else
+            TempData["Error"] = "Failed to create Vehicle Make.";
         return RedirectToAction("Index");
     }
 
@@ -84,8 +88,11 @@ public class VehicleMakeController : Controller
             return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
 
         var dto = _mapper.Map<VehicleMakeDto>(viewModel);
-        await _vehicleMakeService.UpdateAsync(dto);
-        TempData["Success"] = "Vehicle Make updated successfully!";
+        var success = await _vehicleMakeService.UpdateAsync(dto);
+        if (success)
+            TempData["Success"] = "Vehicle Make updated successfully!";
+        else
+            TempData["Error"] = "Failed to update Vehicle Make.";
         return RedirectToAction("Index");
     }
 
@@ -112,13 +119,18 @@ public class VehicleMakeController : Controller
 
         try
         {
-            await _vehicleMakeService.DeleteAsync(id);
-            TempData["Success"] = "Vehicle Make deleted.";
+            var success = await _vehicleMakeService.DeleteAsync(id);
+            if (success)
+                TempData["Success"] = "Vehicle Make deleted.";
+            else
+                TempData["Error"] = "Failed to delete Vehicle Make.";
         }
         catch (InvalidOperationException ex)
         {
             TempData["Error"] = ex.Message;
         }
         return RedirectToAction("Index");
-    }
-}
+
+    } //updated service methods to return bool
+
+} //update controllers to use new PagedResult and pass TotalCount to views

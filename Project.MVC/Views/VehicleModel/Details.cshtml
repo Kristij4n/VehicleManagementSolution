@@ -6,18 +6,21 @@
 
 <h2>Vehicle Model Details</h2>
 
-<div>
-    <dl class="row">
-        <dt class="col-sm-2">Name</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Name)</dd>
-
-        <dt class="col-sm-2">Abrv</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Abrv)</dd>
-
-        <dt class="col-sm-2">Make</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.MakeName)</dd>
-    </dl>
+<div class="form-group">
+    <label>Name:</label>
+    <span>@Model.Name</span>
+</div>
+<div class="form-group">
+    <label>Abbreviation:</label>
+    <span>@Model.Abrv</span>
+</div>
+<div class="form-group">
+    <label>Make:</label>
+    <span>@Model.MakeName</span>
 </div>
 
-@Html.ActionLink("Edit", "Edit", new { id = Model.Id }, new { @class = "btn btn-primary" }) |
-@Html.ActionLink("Back to List", "Index", null, new { @class = "btn btn-secondary" })
+<div class="mt-3">
+    <a href="@Url.Action("Edit", "VehicleModel", new { id = Model.Id })" class="btn btn-warning">Edit</a>
+    <a href="@Url.Action("Delete", "VehicleModel", new { id = Model.Id })" class="btn btn-danger">Delete</a>
+    <a href="@Url.Action("Index", "VehicleModel")" class="btn btn-secondary">Back to List</a>
+</div>

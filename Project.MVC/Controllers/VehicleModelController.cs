@@ -2,6 +2,7 @@
 using Project.MVC_.ViewModels;
 using Project.Service_.DTOs;
 using Project.Service_.Interfaces;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -25,20 +26,16 @@ namespace Project.MVC_.Controllers
         public async Task<ActionResult> Index(string search, string sortOrder, int page = 1, int pageSize = 10, int? makeId = null)
         {
             var makes = await _vehicleMakeService.GetAllAsync();
-            ViewBag.Makes = new SelectList(makes, "Id", "Name", makeId);
+            ViewBag.Makes = new SelectList(makes.Items, "Id", "Name", makeId);
 
-            var models = await _vehicleModelService.GetAllAsync(search, sortOrder, page, pageSize, makeId);
-            var viewModels = models.Select(model =>
-            {
-                var vm = _mapper.Map<VehicleModelViewModel>(model);
-                vm.MakeName = model.MakeName;
-                return vm;
-            });
+            var pagedResult = await _vehicleModelService.GetAllAsync(search, sortOrder, page, pageSize, makeId);
+            var viewModels = _mapper.Map<IEnumerable<VehicleModelViewModel>>(pagedResult.Items);
 
             ViewBag.CurrentSort = sortOrder;
             ViewBag.CurrentFilter = search;
             ViewBag.Page = page;
             ViewBag.PageSize = pageSize;
+            ViewBag.TotalCount = pagedResult.TotalCount;
 
             return View(viewModels);
         }
@@ -69,13 +66,15 @@ namespace Project.MVC_.Controllers
             if (!ModelState.IsValid)
             {
                 await PopulateMakeDropdown(viewModel.MakeId);
-                // Could return BadRequest, but returning view is more user-friendly for forms.
                 return View(viewModel);
             }
 
             var dto = _mapper.Map<VehicleModelDto>(viewModel);
-            await _vehicleModelService.AddAsync(dto);
-            TempData["Success"] = "Vehicle Model created successfully!";
+            var success = await _vehicleModelService.AddAsync(dto);
+            if (success)
+                TempData["Success"] = "Vehicle Model created successfully!";
+            else
+                TempData["Error"] = "Failed to create Vehicle Model.";
             return RedirectToAction("Index");
         }
 
@@ -104,8 +103,11 @@ namespace Project.MVC_.Controllers
             }
 
             var dto = _mapper.Map<VehicleModelDto>(viewModel);
-            await _vehicleModelService.UpdateAsync(dto);
-            TempData["Success"] = "Vehicle Model updated successfully!";
+            var success = await _vehicleModelService.UpdateAsync(dto);
+            if (success)
+                TempData["Success"] = "Vehicle Model updated successfully!";
+            else
+                TempData["Error"] = "Failed to update Vehicle Model.";
             return RedirectToAction("Index");
         }
 
@@ -130,15 +132,21 @@ namespace Project.MVC_.Controllers
             if (dto == null)
                 return HttpNotFound();
 
-            await _vehicleModelService.DeleteAsync(id);
-            TempData["Success"] = "Vehicle Model deleted.";
+            var success = await _vehicleModelService.DeleteAsync(id);
+            if (success)
+                TempData["Success"] = "Vehicle Model deleted.";
+            else
+                TempData["Error"] = "Failed to delete Vehicle Model.";
+
+            // Redirect to VehicleModel list!
             return RedirectToAction("Index");
         }
 
         private async Task PopulateMakeDropdown(int? selectedMakeId = null)
         {
             var makes = await _vehicleMakeService.GetAllAsync();
-            ViewBag.Makes = new SelectList(makes, "Id", "Name", selectedMakeId);
+            ViewBag.Makes = new SelectList(makes.Items, "Id", "Name", selectedMakeId);
         }
-    }
-}
+    } //updated VehicleModel for create new model
+
+} //update controllers to use new PagedResult and pass TotalCount to views
